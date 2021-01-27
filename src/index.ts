@@ -43,7 +43,7 @@ let j : Pred<Pred<Pred<Pred<Pred<Zero>>>>>;
 
 type Add<M extends Num, N extends Num> = {
     True: M;
-    False: Succ<Add<M, Pred<N>>>;
+    False: Add<Succ<M>, Pred<N>>;
 }[IsZero<N>];
 
 type Sub<M extends Num, N extends Num> = {
@@ -53,7 +53,7 @@ type Sub<M extends Num, N extends Num> = {
 
 type Mul<M extends Num, N extends Num> = {
     True: Zero;
-    False: Add<Mul<M, Pred<N>>, M>;
+    False: Add<M, Mul<M, Pred<N>> extends Num ? Mul<M, Pred<N>> : Zero>;
 }[IsZero<N>];
 
 //type Add<T extends Num, U extends Num> = U extends Zero ? T : Add<Succ<T>, Pred<U>>;
@@ -70,11 +70,23 @@ let mul2 : Mul<Succ<Zero>, Zero>;
 let mul3 : Mul<Succ<Succ<Zero>>, Succ<Succ<Succ<Zero>>>>;
 let mul4 : ToNumber<Mul<ToNum<7>, ToNum<5>>>;
 
+type MakeTuple<T extends Number> = _MakeTuple<T, []>;
+type _MakeTuple<T extends Number, U extends any[]> = {
+    0: U
+    1: _MakeTuple<T, [any, ...U]>
+}[U["length"] extends T ? 0 : 1];
+
 type ToNum<T extends Number> = MakeNum<T, [], Zero>;
-type MakeNum<T extends Number, U extends any[], V extends Num> = U["length"] extends T ? V : MakeNum<T, [any, ...U], Succ<V>>;
+type MakeNum<T extends Number, U extends any[], V extends Num> = {
+    0: V
+    1: MakeNum<T, [any, ...U], Succ<V>>
+}[U["length"] extends T ? 0 : 1];
 
 type ToNumber<T extends Num> = MakeNumber<T, []>;
-type MakeNumber<T extends Num, U extends any[]> = T extends Zero ? U["length"] : MakeNumber<Pred<T>, [any, ...U]>;
+type MakeNumber<T extends Num, U extends any[]> = {
+    0: U["length"]
+    1: MakeNumber<Pred<T>, [any, ...U]>
+}[T extends Zero ? 0 : 1];
 
 let aa: MakeTuple<10>["length"]
 let bb: ToNum<10>;
